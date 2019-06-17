@@ -1,0 +1,361 @@
+DROP TABLE Branch;
+DROP TABLE Account ;
+DROP TABLE Employee ;
+DROP TABLE CUSTOMER ;
+DROP TABLE CustomerAccount ;
+
+DROP TYPE AccountType ;
+DROP TYPE EMPLOYEETYPE ;
+DROP TYPE CUSTOMERTYPE ;
+DROP TYPE BRANCHTYPE ;
+DROP TYPE PERSONTYPE ;
+DROP TYPE ADDRESSTYPE ;
+DROP TYPE PERSONAL_DETAILS ;
+DROP TYPE STREET_CITY ;
+DROP TYPE Phone_Numbers ;
+DROP TYPE MOBILE_ARRAY ;
+DROP TYPE NAME ;
+DROP TYPE ACCNUM_NESTED ;
+
+CREATE TYPE Street_City AS OBJECT (
+  street varchar2(20),
+  city varchar2(20));
+/
+CREATE TYPE AddressType AS OBJECT (
+  Address_Street_City Street_City,
+  postal_code varchar2(20));
+/
+
+CREATE TYPE Name AS OBJECT (
+  firstname varchar2(20),
+  surname varchar2(20) );
+/
+CREATE TYPE Personal_Details AS OBJECT (
+  title varchar2(20),
+  first_last_name Name);
+/
+
+CREATE TYPE Mobile_array as varray(2) of varchar2(12);
+/
+CREATE TYPE Phone_Numbers AS OBJECT (
+  HomePhone varchar2(20),
+  MobilePhone Mobile_array);
+/
+
+CREATE TYPE BranchType AS OBJECT (
+  bID INT,
+  bAddress AddressType,
+  bPhone varchar2(12));
+/
+
+CREATE TYPE PersonType AS OBJECT(
+  Address AddressType,
+  PersonalDetails Personal_Details,
+  Phones Phone_Numbers,
+  niNum varchar2(5))
+  NOT FINAL;
+/
+  
+CREATE TYPE EmployeeType UNDER PersonType(
+  empID INT,
+  bID REF BranchType,
+  supervisorID INT,
+  position varchar2(20),
+  salary INT,
+  joinDate varchar2(20)
+  )FINAL;
+/
+
+CREATE TYPE AccountType AS OBJECT (
+  accID INT,
+  accType varchar2(20),
+  balance INT,
+  inRate varchar2(5),
+  limitOfFreeOD varchar2(5),
+  openDate varchar2(20), 
+  branchID ref BranchType);
+/
+
+CREATE TYPE accNum_nested as table of varchar2(4);
+/
+CREATE TYPE CustomerType UNDER PersonType(
+  custID INT
+  )FINAL;
+/
+
+CREATE TABLE Branch OF BranchType;
+/
+CREATE TABLE Account OF AccountType;
+/
+
+CREATE TABLE Employee OF EmployeeType;
+CREATE TABLE CUSTOMER OF CustomerType;
+
+CREATE TABLE CustomerAccount(
+  CustID ref CustomerType scope is CUSTOMER,
+  AccountID REF accountType Scope is Account);
+  /
+
+Insert into Branch values(901, AddressType(Street_City('Market', 'Edinburgh'), 'EH1 5AB'), '01311235560');
+Insert into Branch values(908, AddressType(Street_City('Grove', 'Edinburgh'), 'EH3 8AF'), '01418324556');
+Insert into Branch values(333, AddressType(Street_City('Lothian', 'Edinburgh'), 'EH5 5BH'), '07295214556');
+Insert into Branch values(765, AddressType(Street_City('Princes', 'Edinburgh'), 'EB8 1FQ'), '01313272956');
+Insert into Branch values(143, AddressType(Street_City('Montepellier', 'Edinburgh'), 'EF8 8BQ'), '01573774573');
+Insert into Branch values(842, AddressType(Street_City('Bridge', 'Edinburgh'), 'EK4 3NM'), '0675236257');
+Insert into Branch values(493, AddressType(Street_City('House', 'Edinburgh'), 'EF2 6RF'), '01335693556');
+Insert into Branch values(469, AddressType(Street_City('Bridge', 'Glasgow'), 'G18 1QQ'), '01413214556');
+Insert into Branch values(868, AddressType(Street_City('Rose', 'Glasgow'), 'G73 7HK'), '01414914284');
+Insert into Branch values(123, AddressType(Street_City('Holland', 'Glasgow'), 'G28 1WB'), '03456217282');
+Insert into Branch values(674, AddressType(Street_City('Miller', 'Glasgow'), 'G45 1GB'), '0129034546');
+Insert into Branch values(789, AddressType(Street_City('Fox', 'Glasgow'), 'G48 1QE'), '014893312545');
+Insert into Branch values(016, AddressType(Street_City('Gamet', 'Glasgow'), 'G62 1UH'), '055673344666');
+Insert into Branch values(389, AddressType(Street_City('Bath', 'Glasgow'), 'G71 8MZ'), '05673414586');
+Insert into Branch values(245, AddressType(Street_City('Cochrane', 'Glasgow'), 'G18 1QQ'), '023516778556');
+Insert into Branch values(671, AddressType(Street_City('Union', 'Aberdeen'), 'A74 7FF'), '014513556');
+Insert into Branch values(934, AddressType(Street_City('Market', 'Aberdeen'), 'A57 6JS'), '054133456');
+Insert into Branch values(582, AddressType(Street_City('Chapel', 'Aberdeen'), 'A48 3QT'), '0324575456');
+Insert into Branch values(325, AddressType(Street_City('Broad', 'Aberdeen'), 'A83 aFG'), '014314652856');
+Insert into Branch values(823, AddressType(Street_City('Castle', 'Aberdeen'), 'A48 9KD'), '01455678956');
+Insert into Branch values(010, AddressType(Street_City('Park', 'Aberdeen'), 'A68 7IR'), '02115814556');
+
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(1001, 'savings', 820, '0.02','800', '2008-11-11', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901));
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(1010, 'savings', 5678, '0.02', '', '2013-12-01', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901));
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(8002, 'current', 2467, '0.005', '100', '2015-01-01', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 333));
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(683, 'savings', 73792, '0.02', '', '1993-11-15', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 143));
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(0526, 'savings', 21, '0.02', '500', '1995-05-11', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 143));
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(6627, 'current', 12357, '0.005', '700', '2001-05-22', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 582));                    
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(7727, 'current', 3579, '0.005', '', '1967-01-01', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 389));                    
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(8693, 'current', 3584, '0.005', '700', '2004-03-11', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901));                    
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(2301, 'savings', 3482, '0.02', '1000', '2011-03-05', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 765));                   
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(283, 'current', 357, '0.005', '300', '2000-01-10', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901));                    
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(3683, 'savings', 8890, '0.02', '', '2000-01-06', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 868));                    
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(3562, 'current', 722, '0.005', '', '2008-01-11', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 789));                    
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(1358, 'current', 468, '0.005', '1100', '2002-02-04', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 934));                    
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(3535, 'current', 820, '0.005', '800', '2016-12-27', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 016));                    
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(3573, 'savings', 8334, '0.02', '1200', '2008-01-14', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 789));                    
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(9631, 'savings', 12345, '0.02', '', '2008-03-05', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 010));                    
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(0742, 'savings', 845678, '0.02', '800', '2005-12-13', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 010));                    
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(4319, 'current', 66, '0.005', '100', '2008-11-11', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 765));                    
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(2357, 'current', 178, '0.005', '', '2004-12-19', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 245));
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(8410, 'savings', 45767, '0.02', '', '2008-12-01', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 671));
+Insert into Account(accID, accType, balance, inRate, limitOfFreeOD, openDate, branchID) 
+                    values(6666, 'savings', 8520, '0.1','8000', '2008-11-11', (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901));
+                    
+Insert into CUSTOMER values(AddressType(Street_City('Adam', 'Edinburgh'), 'EH1 6EA'), 
+                            Personal_Details('Mr', Name('Jack', 'Smith')), 
+                            Phone_Numbers('0131613623', Mobile_array('0781209890', '0771234567')),
+                            'NI810', 1002);
+Insert into CUSTOMER values(AddressType(Street_City('Adam', 'Edinburgh'), 'EH1 6EA'), 
+                            Personal_Details('Mrs', Name('Anna', 'Smith')), 
+                            Phone_Numbers('057812370', Mobile_array('0770111222')),
+                            'NI010', 1003);
+Insert into CUSTOMER values(AddressType(Street_City('New', 'Edinburgh'), 'EH2 8XN'), 
+                            Personal_Details('Mr', Name('Liam', 'Bain')), 
+                            Phone_Numbers('01644357731', Mobile_array('')),
+                            'NI034', 1098);
+Insert into CUSTOMER values(AddressType(Street_City('Street4', 'Edinburgh'), 'EH5 5BH'), 
+                            Personal_Details('Mr', Name('Jack', 'Smith')), 
+                            Phone_Numbers('01345126223', Mobile_array('0781209890', '0771234567')),
+                            'NI754', 1005);
+Insert into CUSTOMER values(AddressType(Street_City('Street5', 'Edinburgh'), 'EH6 7ED'), 
+                            Personal_Details('Mr', Name('Jack', 'Smith')), 
+                            Phone_Numbers('014177116223', Mobile_array('0781209890', '0771234567')),
+                            'NI830', 1056);
+Insert into CUSTOMER values(AddressType(Street_City('Street6', 'Edinburgh'), 'EG6 6EA'), 
+                            Personal_Details('Mrs', Name('Jenny', 'Jones')), 
+                            Phone_Numbers('013671162223', Mobile_array('078145269890', '077454567')),
+                            'NI582', 1062);
+Insert into CUSTOMER values(AddressType(Street_City('Street7', 'Edinburgh'), 'ED1 5FG'), 
+                            Personal_Details('Mr', Name('Jack', 'Smith')), 
+                            Phone_Numbers('0151176223', Mobile_array('0781246890', '0764334567')),
+                            'NI489', 1567);
+Insert into CUSTOMER values(AddressType(Street_City('Street8', 'Edinburgh'), 'EY4 8EA'), 
+                            Personal_Details('Mrs', Name('Jack', 'Smith')), 
+                            Phone_Numbers('01311112223', Mobile_array('0781264890', '03664567')),
+                            'NI379', 1765);
+Insert into CUSTOMER values(AddressType(Street_City('Street9', 'Edinburgh'), 'EH5 5BH'), 
+                            Personal_Details('Mr', Name('Betty', 'Boop')), 
+                            Phone_Numbers('017371172723', Mobile_array('078309890', '07723554567')),
+                            'NI356', 1642);
+Insert into CUSTOMER values(AddressType(Street_City('Street10', 'Glasgow'), 'GA5 6ET'), 
+                            Personal_Details('Mr', Name('Jack', 'Smith')), 
+                            Phone_Numbers('077172223', Mobile_array('075659890', '0354234567')),
+                            'NI257', 1052);
+Insert into CUSTOMER values(AddressType(Street_City('Street11', 'Glasgow'), 'GA7 8HB'), 
+                            Personal_Details('Mr', Name('Jack', 'Smith')), 
+                            Phone_Numbers('013711722723', Mobile_array('0746609890', '07754534567')),
+                            'NI467', 1008);
+Insert into CUSTOMER values(AddressType(Street_City('Street12', 'Glasgow'), 'GJ3 6EA'), 
+                            Personal_Details('Mrs', Name('Jack', 'Smith')), 
+                            Phone_Numbers('0154112263', Mobile_array('04513209890')),
+                            'NI479', 1015);
+Insert into CUSTOMER values(AddressType(Street_City('Street13', 'Glasgow'), 'GN8 8BN'), 
+                            Personal_Details('Mr', Name('Jack', 'Smith')), 
+                            Phone_Numbers('01634122723', Mobile_array('0784359890', '077434567')),
+                            'NI273', 1066);
+Insert into CUSTOMER values(AddressType(Street_City('Street14', 'Glasgow'), 'GA2 8EF'), 
+                            Personal_Details('Mr', Name('Jack', 'Smith')), 
+                            Phone_Numbers('04312162273', Mobile_array('')),
+                            'NI583', 1002);
+Insert into CUSTOMER values(AddressType(Street_City('Street15', 'Glasgow'), 'GR5 8ZQ'), 
+                            Personal_Details('Mr', Name('Jack', 'Smith')), 
+                            Phone_Numbers('0133117423', Mobile_array('078329890', '0775644567')),
+                            'NI810', 1936);
+Insert into CUSTOMER values(AddressType(Street_City('Street16', 'Aberdeen'), 'AB1 6EA'), 
+                            Personal_Details('Mr', Name('Jack', 'Smith')), 
+                            Phone_Numbers('0135312263', Mobile_array('0785629890', '0756774567')),
+                            'NI310', 1368);
+Insert into CUSTOMER values(AddressType(Street_City('Street17', 'Aberdeen'), 'AB8 4EA'), 
+                            Personal_Details('Mrs', Name('Charlotte', 'Maggie')), 
+                            Phone_Numbers('0521312323', Mobile_array('0766469890', '0466674567')),
+                            'NI580', 1195);
+Insert into CUSTOMER values(AddressType(Street_City('Street18', 'Aberdeen'), 'AH5 8GD'), 
+                            Personal_Details('Mr', Name('Jack', 'Smith')), 
+                            Phone_Numbers('014115122623', Mobile_array('077124667')),
+                            'NI848', 1662);
+Insert into CUSTOMER values(AddressType(Street_City('Street19', 'Aberdeen'), 'AB4 2DM'), 
+                            Personal_Details('Mr', Name('Jack', 'Smith')), 
+                            Phone_Numbers('051222632737', Mobile_array('0466890', '074664567')),
+                            'NI263', 1087);
+Insert into CUSTOMER values(AddressType(Street_City('Main', 'Edinburgh'), 'AJ6 6EJ'), 
+                            Personal_Details('Mrs', Name('Kate', 'Winslet')), 
+                            Phone_Numbers('0161417223', Mobile_array('0781209890', '0771234567')),
+                            'NI570', 1032);
+Insert into CUSTOMER values(AddressType(Street_City('Street20', 'Aberdeen'), 'EH1 HTT'), 
+                            Personal_Details('Mrs', Name('Holly', 'womanny')), 
+                            Phone_Numbers('07216755', Mobile_array('07705623443', '07907812345')),
+                            'NI001', 1033);
+
+
+Insert into Employee Values (AddressType(Street_City('Dart', 'Edinburgh'), 'EH105TT'), 
+                      Personal_Details('Mrs', Name('Alison', 'Smith')), 
+                      Phone_Numbers('01372455555', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 101, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '' , 'Head' , 50000, '2002-02-04');
+Insert into Employee Values (AddressType(Street_City('Dart', 'Edinburgh'), 'EH5 5TT'), 
+                      Personal_Details('Mrs', Name('Alison', 'Strathesb')), 
+                      Phone_Numbers('013567125555', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 102, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '' , 'Manager' , 40000, '2006-06-08');                     
+Insert into Employee Values (AddressType(Street_City('Dart', 'Edinburgh'), 'EH5 9TQ'), 
+                      Personal_Details('Mr', Name('bob', 'allys')), 
+                      Phone_Numbers('01357782855', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 103, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '' , 'Accountant' , 40000, '2002-11-04');
+Insert into Employee Values (AddressType(Street_City('Dart', 'Edinburgh'), 'EH2 4TH'), 
+                      Personal_Details('Mr', Name('Fred', 'freddison')), 
+                      Phone_Numbers('0133414464555', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 103, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '' , 'Leader' , 20000, '2011-08-03');
+Insert into Employee Values (AddressType(Street_City('Gallowgate', 'Glasgow'), 'EH105TT'), 
+                      Personal_Details('Mr', Name('Geroge', 'wokrer')), 
+                      Phone_Numbers('0134665555', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 104, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '' , 'Manager' , 40000, '2008-11-24');
+Insert into Employee Values (AddressType(Street_City('Main', 'Edinburgh'), 'EH1 HTT'), 
+                      Personal_Details('Mrs', Name('Holly', 'womanny')), 
+                      Phone_Numbers('07216755', Mobile_array('07705623443', '07907812345')),
+                      'NI111', 105, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '102' , 'Accountant' , 10000, '2000-03-04');
+Insert into Employee Values (AddressType(Street_City('Springfield', 'Edinburgh'), 'EH105TT'), 
+                      Personal_Details('Mrs', Name('Sarah', 'notsmith')), 
+                      Phone_Numbers('01317765345', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 106, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '' , 'Leader' , 40000, '2004-05-25');
+Insert into Employee Values (AddressType(Street_City('Bridgeton', 'Glasgow'), 'EH2 5TT'), 
+                      Personal_Details('Mr', Name('Joe', 'hunter')), 
+                      Phone_Numbers('0131467555', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 107, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '102' , 'Accountant' , 30000, '20016-02-15');
+Insert into Employee Values (AddressType(Street_City('Dart', 'Aberdeen'), 'EH6 9TT'), 
+                      Personal_Details('Mrs', Name('Eve', 'tran')), 
+                      Phone_Numbers('01361436555', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 108, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '' , 'Manager' , 10000, '2005-11-15');
+Insert into Employee Values (AddressType(Street_City('Celtic', 'Edinburgh'), 'EH105TT'), 
+                      Personal_Details('Mrs', Name('Editha', 'Gancheva')), 
+                      Phone_Numbers('013126722345', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 109, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '102' , 'Accountant' , 20000, '2002-04-03');
+Insert into Employee Values (AddressType(Street_City('Dart', 'Aberdeen'), 'EH105TT'), 
+                      Personal_Details('Mr', Name('Dan', 'theMan')), 
+                      Phone_Numbers('01316346265', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 110, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '' , 'Manager' , 30000, '2012-12-12');
+Insert into Employee Values (AddressType(Street_City('Outland', 'Glasgow'), 'EH105TT'), 
+                      Personal_Details('Mr', Name('Blob', 'Smith')), 
+                      Phone_Numbers('0139126378555', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 111, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '' , 'Leader' , 30000, '2008-10-24');
+Insert into Employee Values (AddressType(Street_City('Strah', 'Glasgow'), 'EH6 9TT'), 
+                      Personal_Details('Mrs', Name('Jess', 'wowwy')), 
+                      Phone_Numbers('013129546', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 112, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '110' , 'Accountant' , 40000, '2003-07-04');
+Insert into Employee Values (AddressType(Street_City('Rattay', 'Edinburgh'), 'EH4 8TT'), 
+                      Personal_Details('Mrs', Name('Ally', 'jess')), 
+                      Phone_Numbers('013721275355', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 113, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '110' , 'Cleaner' , 20000, '2016-01-01');
+Insert into Employee Values (AddressType(Street_City('Valder', 'Aberdeen'), 'EH8 4LT'), 
+                      Personal_Details('Mr', Name('Scoot', 'Scooty')), 
+                      Phone_Numbers('0131725455', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 114, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '' , 'Manager' , 40000, '1992-02-04');
+Insert into Employee Values (AddressType(Street_City('Parks', 'Glasgow'), 'EH105TT'), 
+                      Personal_Details('Mrs', Name('Alison', 'Turner')), 
+                      Phone_Numbers('2414225555', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 115, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '' , 'Accountant' , 40000, '1990-02-04');
+Insert into Employee Values (AddressType(Street_City('Lighthouse', 'Glasgow'), 'EH105TT'), 
+                      Personal_Details('Mrs', Name('Sharon', 'Tren')), 
+                      Phone_Numbers('01345555', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 116, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '' , 'Cleaner' , 40000, '1992-07-04');
+Insert into Employee Values (AddressType(Street_City('Glamis', 'Edinburgh'), 'EH15 6UT'), 
+                      Personal_Details('Mr', Name('Ben', 'Frank')), 
+                      Phone_Numbers('01675555', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 117, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '' , 'Leader' , 40000, '1980-02-04');
+Insert into Employee Values (AddressType(Street_City('Clyde', 'Edinburgh'), 'EH105TT'), 
+                      Personal_Details('Mrs', Name('Laura', 'panny')), 
+                      Phone_Numbers('0131216755', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 118, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '' , 'Manager' , 10000, '2015-07-04');
+Insert into Employee Values (AddressType(Street_City('Chan', 'Edinburgh'), 'EG6 5TT'), 
+                      Personal_Details('Mr', Name('Evan', 'Hoes')), 
+                      Phone_Numbers('0131213555', Mobile_array('07705623443', '07907812345')),
+                      'NI001', 119, (SELECT REF(e) FROM BRANCH e WHERE e.bID = 901), '' , 'Cleaner' , 10000, '2001-02-18');
+
+
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 6666 AND c.CUSTID = 1033;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 1001 AND c.CUSTID = 1002;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 1010 AND c.CUSTID = 1002;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 1010 AND c.CUSTID = 1003;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 8002 AND c.CUSTID = 1098;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 683 AND c.CUSTID = 1005;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 8002 AND c.CUSTID = 1056;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 683 AND c.CUSTID = 1062;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 0526 AND c.CUSTID = 1567;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 6627 AND c.CUSTID = 1765;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 7727 AND c.CUSTID = 1642;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 8693 AND c.CUSTID = 1052;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 2301 AND c.CUSTID = 1098;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 283 AND c.CUSTID = 1008;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 3683 AND c.CUSTID = 1015;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 3562 AND c.CUSTID = 1002;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 1358 AND c.CUSTID = 1936;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 3535 AND c.CUSTID = 1368;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 3573 AND c.CUSTID = 1195;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 9631 AND c.CUSTID = 1662;
+insert into CustomerAccount select ref(c), ref(a) from Customer c, Account a where a.ACCID = 0742 AND c.CUSTID = 1087;
+
+
+
+
+
+
+
+
+
